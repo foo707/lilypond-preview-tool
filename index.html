@@ -330,15 +330,24 @@ trbThree = \relative c {
 
 \score {
   \new StaffGroup <<
-    \new Staff \with { instrumentName = "Trb 1" } {
+    \new Staff \with { 
+      instrumentName = "Trb 1"
+      midiInstrument = "trombone"
+    } {
       \global
       \trbOne
     }
-    \new Staff \with { instrumentName = "Trb 2" } {
+    \new Staff \with { 
+      instrumentName = "Trb 2"
+      midiInstrument = "trombone"
+    } {
       \global
       \trbTwo
     }
-    \new Staff \with { instrumentName = "Trb 3" } {
+    \new Staff \with { 
+      instrumentName = "Trb 3"
+      midiInstrument = "trombone"
+    } {
       \global
       \trbThree
     }
@@ -458,15 +467,24 @@ trbThree = \\relative c {
 
 \\score {
   \\new StaffGroup <<
-    \\new Staff \\with { instrumentName = "Trb 1" } {
+    \\new Staff \\with { 
+      instrumentName = "Trb 1"
+      midiInstrument = "trombone"
+    } {
       \\global
       \\trbOne
     }
-    \\new Staff \\with { instrumentName = "Trb 2" } {
+    \\new Staff \\with { 
+      instrumentName = "Trb 2"
+      midiInstrument = "trombone"
+    } {
       \\global
       \\trbTwo
     }
-    \\new Staff \\with { instrumentName = "Trb 3" } {
+    \\new Staff \\with { 
+      instrumentName = "Trb 3"
+      midiInstrument = "trombone"
+    } {
       \\global
       \\trbThree
     }
@@ -507,10 +525,22 @@ tuba = \\relative c {
 
 \\score {
   \\new StaffGroup <<
-    \\new Staff \\with { instrumentName = "Tp" } { \\global \\trumpet }
-    \\new Staff \\with { instrumentName = "Hr" } { \\global \\horn }
-    \\new Staff \\with { instrumentName = "Trb" } { \\global \\trombone }
-    \\new Staff \\with { instrumentName = "Tuba" } { \\global \\tuba }
+    \\new Staff \\with { 
+      instrumentName = "Tp"
+      midiInstrument = "trumpet"
+    } { \\global \\trumpet }
+    \\new Staff \\with { 
+      instrumentName = "Hr"
+      midiInstrument = "french horn"
+    } { \\global \\horn }
+    \\new Staff \\with { 
+      instrumentName = "Trb"
+      midiInstrument = "trombone"
+    } { \\global \\trombone }
+    \\new Staff \\with { 
+      instrumentName = "Tuba"
+      midiInstrument = "tuba"
+    } { \\global \\tuba }
   >>
   \\layout { }
   \\midi { }
