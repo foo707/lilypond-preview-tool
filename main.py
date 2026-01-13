@@ -36,7 +36,7 @@ class LilyPondCode(BaseModel):
 class RenderResponse(BaseModel):
     success: bool
     pdf: str = None  # base64
-    midi: str = None  # base64
+    mp3: str = None  # base64（MIDIからMP3に変更）
     svg: str = None
     error: str = None
 
@@ -114,11 +114,46 @@ async def render_lilypond(request: LilyPondCode):
                 with open(pdf_file, "rb") as f:
                     response.pdf = base64.b64encode(f.read()).decode('utf-8')
             
-            # MIDI
+            # MIDI → MP3変換
             midi_file = tmppath / "output.midi"
             if midi_file.exists():
-                with open(midi_file, "rb") as f:
-                    response.midi = base64.b64encode(f.read()).decode('utf-8')
+                try:
+                    # FluidSynthでMIDI → WAV変換
+                    wav_file = tmppath / "output.wav"
+                    subprocess.run(
+                        [
+                            "fluidsynth",
+                            "-ni",
+                            "/usr/share/sounds/sf2/FluidR3_GM.sf2",
+                            str(midi_file),
+                            "-F", str(wav_file),
+                            "-r", "44100"
+                        ],
+                        capture_output=True,
+                        timeout=30
+                    )
+                    
+                    # FFmpegでWAV → MP3変換
+                    if wav_file.exists():
+                        mp3_file = tmppath / "output.mp3"
+                        subprocess.run(
+                            [
+                                "ffmpeg",
+                                "-i", str(wav_file),
+                                "-acodec", "libmp3lame",
+                                "-ab", "128k",
+                                str(mp3_file)
+                            ],
+                            capture_output=True,
+                            timeout=30
+                        )
+                        
+                        if mp3_file.exists():
+                            with open(mp3_file, "rb") as f:
+                                response.mp3 = base64.b64encode(f.read()).decode('utf-8')
+                except Exception as e:
+                    # MP3変換失敗時はエラーログのみ（PDF表示は継続）
+                    print(f"MP3 conversion error: {e}")
             
             # SVG（PNGから生成される場合もある）
             svg_file = tmppath / "output.svg"
