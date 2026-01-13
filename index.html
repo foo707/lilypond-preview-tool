@@ -557,14 +557,14 @@ tuba = \\relative c {
                         preview.innerHTML = `<embed src="${pdfUrl}" type="application/pdf" width="100%" height="600px">`;
                     }
                     
-                    // MIDI再生
-                    if (data.midi) {
-                        const midiBlob = base64ToBlob(data.midi, 'audio/midi');
-                        const midiUrl = URL.createObjectURL(midiBlob);
+                    // MP3再生
+                    if (data.mp3) {
+                        const mp3Blob = base64ToBlob(data.mp3, 'audio/mpeg');
+                        const mp3Url = URL.createObjectURL(mp3Blob);
                         document.getElementById('midi-container').innerHTML = `
                             <div class="midi-player">
-                                <h4>🎹 MIDI再生</h4>
-                                <audio controls src="${midiUrl}"></audio>
+                                <h4>🎵 音声再生</h4>
+                                <audio controls src="${mp3Url}"></audio>
                             </div>
                         `;
                     }
