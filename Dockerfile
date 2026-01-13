@@ -10,6 +10,9 @@ RUN apt-get update && apt-get install -y \
     python3-pip \
     python3-venv \
     lilypond \
+    fluidsynth \
+    fluid-soundfont-gm \
+    ffmpeg \
     && rm -rf /var/lib/apt/lists/*
 
 # 作業ディレクトリ作成
