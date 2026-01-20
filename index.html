@@ -176,12 +176,19 @@
             box-shadow: 0 5px 15px rgba(0,0,0,0.1);
         }
         
-        .midi-player {
+        .audio-player {
             width: 100%;
-            margin-top: 20px;
-            padding: 20px;
-            background: #f8f9fa;
+            margin-bottom: 15px;
+            padding: 15px;
+            background: #f0f7ff;
             border-radius: 8px;
+            border: 2px solid #667eea;
+        }
+        
+        .audio-player h4 {
+            margin: 0 0 10px 0;
+            color: #667eea;
+            font-size: 1em;
         }
         
         audio {
@@ -287,6 +294,8 @@
                 </div>
             </div>
             
+            <div id="message-area"></div>
+            
             <div class="editor-section">
                 <div class="panel">
                     <h3>LilyPondコード</h3>
@@ -368,14 +377,12 @@ trbThree = \relative c {
                 
                 <div class="panel">
                     <h3>プレビュー</h3>
+                    <div id="audio-container"></div>
                     <div id="preview" class="preview-area">
                         <p style="color: #999;">楽譜がここに表示されます</p>
                     </div>
-                    <div id="midi-container"></div>
                 </div>
             </div>
-            
-            <div id="message-area"></div>
         </div>
         
         <!-- MusicXML変換タブ -->
@@ -559,6 +566,7 @@ tuba = \\relative c {
         async function renderLilypond() {
             const code = document.getElementById('lilypond-code').value;
             const preview = document.getElementById('preview');
+            const audioContainer = document.getElementById('audio-container');
             const messageArea = document.getElementById('message-area');
             
             if (!code.trim()) {
@@ -568,6 +576,7 @@ tuba = \\relative c {
             
             preview.innerHTML = '<div class="loading-spinner"></div><p style="margin-top: 20px;">楽譜を生成中...</p>';
             preview.classList.add('loading');
+            audioContainer.innerHTML = '';
             messageArea.innerHTML = '';
             
             try {
@@ -580,29 +589,36 @@ tuba = \\relative c {
                 const data = await response.json();
                 
                 if (data.success) {
-                    // PDF表示
+                    // PDF表示（優先）
                     if (data.pdf) {
                         const pdfBlob = base64ToBlob(data.pdf, 'application/pdf');
                         const pdfUrl = URL.createObjectURL(pdfBlob);
-                        preview.innerHTML = `<embed src="${pdfUrl}" type="application/pdf" width="100%" height="600px">`;
+                        // iframeでPDF表示（ツールバー非表示）
+                        preview.innerHTML = `<iframe src="${pdfUrl}#toolbar=0&navpanes=0&scrollbar=0" width="100%" height="600px" style="border: none;"></iframe>`;
+                        showMessage(messageArea, '✅ 楽譜の生成に成功しました！', 'success');
                     }
                     
                     // MP3再生
                     if (data.mp3) {
                         const mp3Blob = base64ToBlob(data.mp3, 'audio/mpeg');
                         const mp3Url = URL.createObjectURL(mp3Blob);
-                        document.getElementById('midi-container').innerHTML = `
-                            <div class="midi-player">
+                        audioContainer.innerHTML = `
+                            <div class="audio-player">
                                 <h4>🎵 音声再生</h4>
                                 <audio controls src="${mp3Url}"></audio>
                             </div>
                         `;
+                    } else {
+                        // MP3が生成されなかった場合
+                        audioContainer.innerHTML = `
+                            <div class="audio-player">
+                                <p style="color: #666; margin: 0;">⚠️ 音声生成に失敗しました</p>
+                            </div>
+                        `;
                     }
-                    
-                    showMessage(messageArea, '楽譜の生成に成功しました！', 'success');
                 } else {
                     preview.innerHTML = '<p style="color: #999;">エラーが発生しました</p>';
-                    showMessage(messageArea, 'エラー: ' + data.error, 'error');
+                    showMessage(messageArea, '❌ エラー: ' + data.error, 'error');
                 }
                 
                 preview.classList.remove('loading');
@@ -610,7 +626,7 @@ tuba = \\relative c {
             } catch (error) {
                 preview.innerHTML = '<p style="color: #999;">エラーが発生しました</p>';
                 preview.classList.remove('loading');
-                showMessage(messageArea, 'ネットワークエラー: ' + error.message, 'error');
+                showMessage(messageArea, '❌ ネットワークエラー: ' + error.message, 'error');
             }
         }
         
@@ -696,7 +712,7 @@ tuba = \\relative c {
             if (confirm('コードをクリアしますか？')) {
                 document.getElementById('lilypond-code').value = '';
                 document.getElementById('preview').innerHTML = '<p style="color: #999;">楽譜がここに表示されます</p>';
-                document.getElementById('midi-container').innerHTML = '';
+                document.getElementById('audio-container').innerHTML = '';
                 document.getElementById('message-area').innerHTML = '';
             }
         }
