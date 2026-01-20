@@ -71,7 +71,7 @@ async def health():
 @app.post("/render", response_model=RenderResponse)
 async def render_lilypond(request: LilyPondCode):
     """
-    LilyPondコードをレンダリング
+    LilyPondコードをレンダリング（PDF優先）
     """
     # 一時ディレクトリを作成
     with tempfile.TemporaryDirectory() as tmpdir:
@@ -82,7 +82,7 @@ async def render_lilypond(request: LilyPondCode):
         ly_file.write_text(request.code, encoding='utf-8')
         
         try:
-            # LilyPondを実行
+            # LilyPondを実行（PDF + MIDI生成）
             result = subprocess.run(
                 [
                     "lilypond",
@@ -108,19 +108,19 @@ async def render_lilypond(request: LilyPondCode):
             # 出力ファイルを読み込み
             response = RenderResponse(success=True)
             
-            # PDF
+            # PDF（優先）
             pdf_file = tmppath / "output.pdf"
             if pdf_file.exists():
                 with open(pdf_file, "rb") as f:
                     response.pdf = base64.b64encode(f.read()).decode('utf-8')
             
-            # MIDI → MP3変換
+            # MIDI → MP3変換（時間がかかる処理）
             midi_file = tmppath / "output.midi"
             if midi_file.exists():
                 try:
                     # FluidSynthでMIDI → WAV変換
                     wav_file = tmppath / "output.wav"
-                    subprocess.run(
+                    fluidsynth_result = subprocess.run(
                         [
                             "fluidsynth",
                             "-ni",
@@ -134,25 +134,26 @@ async def render_lilypond(request: LilyPondCode):
                     )
                     
                     # FFmpegでWAV → MP3変換
-                    if wav_file.exists():
+                    if wav_file.exists() and fluidsynth_result.returncode == 0:
                         mp3_file = tmppath / "output.mp3"
-                        subprocess.run(
+                        ffmpeg_result = subprocess.run(
                             [
                                 "ffmpeg",
                                 "-i", str(wav_file),
                                 "-acodec", "libmp3lame",
                                 "-ab", "128k",
-                                str(mp3_file)
+                                str(mp3_file),
+                                "-y"  # 上書き
                             ],
                             capture_output=True,
                             timeout=30
                         )
                         
-                        if mp3_file.exists():
+                        if mp3_file.exists() and ffmpeg_result.returncode == 0:
                             with open(mp3_file, "rb") as f:
                                 response.mp3 = base64.b64encode(f.read()).decode('utf-8')
                 except Exception as e:
-                    # MP3変換失敗時はエラーログのみ（PDF表示は継続）
+                    # MP3変換失敗時はログのみ（PDF表示は継続）
                     print(f"MP3 conversion error: {e}")
             
             # SVG（PNGから生成される場合もある）
